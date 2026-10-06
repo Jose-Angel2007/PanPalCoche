@@ -357,6 +357,25 @@ body:has(#refrescar.girando) .lista:empty::before {
 .vista-mapa .mapa { display: block; height: calc(100dvh - var(--alto-barra) - var(--alto-ctrl) - env(safe-area-inset-top)); }
 
 /* ---------- Pie ---------- */
+/* ---------- Donaciones ("Invítame a un kebab") ---------- */
+.pie .donar {
+  display: flex; align-items: center; gap: 12px; margin: 4px 0 16px; padding: 12px 14px;
+  border-radius: 16px; border: 1.5px dashed var(--amarillo); background: var(--superficie);
+  color: var(--texto); text-decoration: none; font-size: .9rem; line-height: 1.3;
+}
+.pie .donar:hover { border-style: solid; }
+.pie .donar:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+.donar-icono { flex: none; font-size: 1.7rem; rotate: -8deg; }
+.donar-texto { flex: 1; min-width: 0; font-weight: 500; color: var(--suave); }
+.donar-texto strong { display: block; font-weight: 800; color: var(--texto); }
+.donar-precio {
+  flex: none; padding: 4px 12px; border-radius: 999px;
+  background: var(--amarillo); color: var(--sobre-amarillo); font-weight: 800; white-space: nowrap;
+}
+/* Selector de atributo con *= ("contiene"): mientras el enlace lleve el texto de
+   ejemplo, el botón no se muestra. Así no se puede publicar roto por despiste. */
+.donar[href*="TU_USUARIO"] { display: none !important; }
+
 .pie { padding: 4px 16px 100px; font-size: .78rem; color: var(--suave); text-wrap: pretty; }
 
 /* ---------- Escritorio: lista a la izquierda, mapa a la derecha ---------- */
