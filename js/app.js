@@ -450,7 +450,7 @@ function pedirUbicacion() {
       estado.ubicacion = { lat: pos.coords.latitude, lon: pos.coords.longitude };
       estado.orden = 'distancia';
       boton.dataset.estado = 'activada';
-      boton.textContent = 'Ubicación activada';
+      boton.textContent = 'Ubicación activa';
       render();
       if (mapa) mapa.setView([estado.ubicacion.lat, estado.ubicacion.lon], 14);
     },

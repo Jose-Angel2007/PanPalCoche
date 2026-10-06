@@ -360,6 +360,26 @@ body:has(#refrescar.girando) .lista:empty::before {
 .pie { padding: 4px 16px 100px; font-size: .78rem; color: var(--suave); text-wrap: pretty; }
 
 /* ---------- Escritorio: lista a la izquierda, mapa a la derecha ---------- */
+/* ---------- Móvil: controles en rejilla 2x2 ----------
+   En una fila con scroll horizontal, "Solo abiertas" y "Usar mi ubicación" quedaban
+   fuera de la pantalla y había que deslizar para descubrirlos. En móvil los ponemos
+   en dos filas de dos columnas iguales: todo visible, a cambio de ~50 px de alto.
+   --alto-ctrl se usa para calcular el alto del mapa a pantalla completa, así que
+   hay que actualizarlo: 2 filas de 44 px + 8 px de hueco + 2 x 10 px de relleno. */
+@media (max-width: 899px) {
+  :root { --alto-ctrl: 116px; }
+  .controles {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+    height: var(--alto-ctrl); padding: 10px 16px; overflow: visible;
+  }
+  .chip { min-width: 0; justify-content: center; }
+  .chip-select select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+  /* "Ubicación activada" es el texto más largo: algo menos de relleno para que quepa en 360 px */
+  .chip { font-size: .88rem; }
+  .chip:not(.chip-select) { padding: 0 10px; gap: 6px; }
+  #ubicacion { overflow: hidden; }
+}
+
 @media (min-width: 900px) {
   :root { --alto-barra: 76px; --col: clamp(400px, 34vw, 460px); }
   body {
