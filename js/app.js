@@ -10,6 +10,8 @@
 const ID_MUNICIPIO = '6058'; // Alcalá de Guadaíra (Sevilla)
 const REFRESCO_MS = 30 * 60 * 1000; // la API actualiza cada media hora
 const LITROS_DEPOSITO = 50; // para traducir céntimos/litro a euros por depósito
+const DONAR_URL = 'https://paypal.me/JoseAP0209'; // + '/1EUR' = importe sugerido
+const AHORRO_MIN_DONAR = 2; // € por depósito: por debajo no tiene sentido pedir nada
 
 const estado = {
   estaciones: [],
@@ -301,7 +303,12 @@ function pintarResumen(lista) {
       <span class="r-precio">${fmtPrecio(min)}<small>€/L</small></span>
       <span class="r-marcas">${listaNatural(empatadas.map((e) => `<strong>${esc(e.rotulo)}</strong>`))}</span>
     </div>
-    <div class="r-ahorro">Llenando ${LITROS_DEPOSITO} L te ahorras <strong>${fmtEuros(ahorro)}</strong> frente a la más cara.</div>`;
+    <div class="r-ahorro">Llenando ${LITROS_DEPOSITO} L te ahorras <strong>${fmtEuros(ahorro)}</strong> frente a la más cara.${
+      // Petición sutil justo donde se ve lo que te ahorras, y solo si el ahorro es real.
+      ahorro >= AHORRO_MIN_DONAR
+        ? ` <a class="r-invita" href="${DONAR_URL}/1EUR" target="_blank" rel="noopener">¿Me invitas a un café? ☕</a>`
+        : ''
+    }</div>`;
 }
 
 /** ["A","B","C"] -> "A, B y C". Con muchas, corta: "A, B, C y 3 más". */

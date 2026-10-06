@@ -117,6 +117,13 @@ button, select, input { font: inherit; color: inherit; }
   border-radius: 12px 5px 12px 6px; text-wrap: pretty;
 }
 .r-ahorro strong { font-weight: 800; }
+/* Enlace de donación dentro del ahorro: mismo color que el texto, solo subrayado */
+.r-ahorro .r-invita {
+  color: inherit; font-weight: 700; white-space: nowrap;
+  text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px;
+}
+.r-ahorro .r-invita:hover { text-decoration-thickness: 2.5px; }
+.r-ahorro .r-invita:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
 /* Primera carga: esqueleto en el sitio del resumen (sin tocar JS) */
 body:has(#refrescar.girando) .resumen[hidden]:not(:has(*)) { display: block; }
 body:has(#refrescar.girando) .resumen[hidden]:not(:has(*))::before {
