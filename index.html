@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PanPalCoche</title>
+  <meta name="description" content="Precios de combustible en las gasolineras de Alcalá de Guadaíra, con datos oficiales del Ministerio.">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="titulo">
+      <h1>PanPalCoche</h1>
+      <p id="actualizado" class="actualizado" aria-live="polite">Cargando precios…</p>
+    </div>
+    <button id="refrescar" class="icono" type="button" aria-label="Actualizar precios" title="Actualizar precios">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <section class="controles" aria-label="Filtros">
+      <label class="campo">
+        <span>Combustible</span>
+        <select id="combustible"></select>
+      </label>
+      <label class="campo">
+        <span>Ordenar por</span>
+        <select id="orden">
+          <option value="precio">Precio</option>
+          <option value="distancia">Distancia</option>
+        </select>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="solo-abiertas"> Solo abiertas ahora
+      </label>
+      <button id="ubicacion" type="button" class="boton">Usar mi ubicación</button>
+    </section>
+
+    <p id="error" class="error" role="alert" hidden></p>
+    <section id="resumen" class="resumen" hidden></section>
+
+    <div class="contenido">
+      <div id="mapa" class="mapa" aria-label="Mapa de gasolineras"></div>
+      <ol id="lista" class="lista"></ol>
+    </div>
+  </main>
+
+  <footer class="pie">
+    Datos: <a href="https://geoportalgasolineras.es/" target="_blank" rel="noopener">Ministerio para la Transición Ecológica</a>
+    · se actualizan cada 30 min · los horarios no tienen en cuenta festivos.
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+  <script src="js/horario.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

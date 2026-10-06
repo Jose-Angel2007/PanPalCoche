@@ -1,0 +1,159 @@
+/* Tokens de color: claro por defecto, oscuro si el sistema lo pide. */
+:root {
+  --fondo: #f5f5f4;
+  --superficie: #ffffff;
+  --texto: #1c1917;
+  --suave: #57534e;
+  --borde: #e7e5e4;
+  --acento: #0f766e;
+  --ok: #15803d;
+  --ko: #b91c1c;
+  --sombra: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 6px rgb(0 0 0 / 0.04);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #121110;
+    --superficie: #1c1a19;
+    --texto: #f5f5f4;
+    --suave: #a8a29e;
+    --borde: #2e2b29;
+    --acento: #2dd4bf;
+    --ok: #4ade80;
+    --ko: #f87171;
+    --sombra: none;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+a { color: var(--acento); }
+main { max-width: 1100px; margin: 0 auto; padding: 0 16px 24px; }
+
+/* Cabecera */
+.cabecera {
+  position: sticky; top: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+  background: var(--acento); color: #fff;
+}
+@media (prefers-color-scheme: dark) { .cabecera { background: #134e4a; } }
+.cabecera h1 { margin: 0; font-size: 1.15rem; }
+.actualizado { margin: 0; font-size: .85rem; opacity: .9; }
+.icono {
+  display: grid; place-items: center; width: 40px; height: 40px;
+  border: 0; border-radius: 50%; background: rgb(255 255 255 / .15); color: #fff; cursor: pointer;
+}
+.icono:disabled { opacity: .6; cursor: default; }
+.girando svg { animation: girar 1s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* Controles */
+.controles {
+  display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px;
+  margin: 14px 0;
+}
+.campo { display: grid; gap: 4px; font-size: .8rem; color: var(--suave); flex: 1 1 150px; }
+select, .boton {
+  font: inherit; color: var(--texto); background: var(--superficie);
+  border: 1px solid var(--borde); border-radius: 10px; padding: 9px 10px; min-height: 42px;
+}
+.check { display: flex; align-items: center; gap: 8px; min-height: 42px; }
+.check input { width: 18px; height: 18px; accent-color: var(--acento); }
+.boton { cursor: pointer; font-weight: 600; color: var(--acento); }
+.boton:disabled { cursor: default; opacity: .7; }
+
+.error {
+  margin: 0 0 12px; padding: 10px 12px; border-radius: 10px;
+  background: color-mix(in srgb, var(--ko) 12%, transparent); color: var(--ko);
+}
+.resumen {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px;
+  margin-bottom: 14px; padding: 12px 14px; border-radius: 12px;
+  background: var(--superficie); box-shadow: var(--sombra); border: 1px solid var(--borde);
+}
+.etq { display: block; font-size: .75rem; color: var(--suave); text-transform: uppercase; letter-spacing: .03em; }
+
+/* Mapa + lista: apilados en móvil, lado a lado en pantallas anchas */
+.contenido { display: grid; gap: 14px; }
+.mapa {
+  height: 45vh; min-height: 260px; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--borde); background: var(--superficie);
+}
+@media (min-width: 900px) {
+  .contenido { grid-template-columns: 1.1fr 1fr; align-items: start; }
+  .mapa { position: sticky; top: 80px; height: calc(100vh - 110px); }
+}
+.aviso { padding: 16px; color: var(--suave); }
+
+.lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.tarjeta {
+  display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center;
+  padding: 12px; border-radius: 12px; cursor: pointer;
+  background: var(--superficie); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+.tarjeta:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.tarjeta.sel { border-color: var(--acento); box-shadow: 0 0 0 1px var(--acento); }
+.tarjeta.cerrada { opacity: .6; }
+.pos { font-weight: 700; color: var(--suave); text-align: center; }
+.info { min-width: 0; }
+.nombre { font-weight: 650; }
+.dir { font-size: .85rem; color: var(--suave); overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: .78rem; color: var(--suave); }
+.estado { font-weight: 600; }
+.estado.ok { color: var(--ok); }
+.estado.ko { color: var(--ko); }
+.dist { font-weight: 600; color: var(--texto); }
+.precio {
+  font-size: 1.35rem; font-weight: 750; font-variant-numeric: tabular-nums;
+  color: var(--c); text-align: right; white-space: nowrap;
+}
+.precio small { display: block; font-size: .7rem; font-weight: 500; color: var(--suave); }
+.vacio { padding: 20px; text-align: center; color: var(--suave); }
+
+/* Chinchetas del mapa con el precio */
+.pin {
+  display: inline-block; transform: translateY(-4px);
+  padding: 3px 7px; border-radius: 8px; white-space: nowrap;
+  font: 700 12px/1.2 system-ui, sans-serif; font-variant-numeric: tabular-nums;
+  color: #fff; background: var(--c); border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / .35);
+}
+.pin::after {
+  content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #fff; border-bottom: 0;
+}
+.pin-cerrada { filter: grayscale(.85); opacity: .75; }
+.pin-sel { outline: 3px solid #2563eb; transform: translateY(-4px) scale(1.15); }
+
+/* Grupos de gasolineras en el mapa */
+.grupo {
+  display: inline-block; transform: translate(-50%, -50%);
+  padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+  font: 600 12px/1.2 system-ui, sans-serif; font-variant-numeric: tabular-nums;
+  color: #fff; background: #0f766e; border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / .35);
+}
+.grupo b {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-right: 5px;
+  border-radius: 999px; background: #fff; color: #0f766e; font-size: 11px;
+}
+
+/* OSM no tiene variante oscura: invertimos los colores de las teselas (y giramos el tono
+   180° para que el agua siga siendo azul y los parques verdes). Solo al fondo, no a las chinchetas. */
+@media (prefers-color-scheme: dark) {
+  .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
+}
+.mapa.sin-fondo { position: relative; }
+.mapa.sin-fondo::after {
+  content: attr(data-aviso); position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  z-index: 1000; padding: 6px 10px; border-radius: 8px; font-size: .78rem; white-space: nowrap;
+  background: var(--superficie); color: var(--suave); border: 1px solid var(--borde);
+}
+
+.pie { max-width: 1100px; margin: 0 auto; padding: 0 16px 24px; font-size: .78rem; color: var(--suave); }

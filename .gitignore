@@ -1,0 +1,5 @@
+# Ficheros que crea el sistema y no pintan nada en el repo
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
