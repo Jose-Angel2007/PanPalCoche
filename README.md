@@ -25,7 +25,7 @@ git push -u origin main
 ```
 
 En GitHub: **Settings → Pages → Source: Deploy from a branch → main / (root)**.
-En un par de minutos estará en `https://<tu-usuario>.github.io/panpalcoche/`.
+En un par de minutos estará en `https://<tu-usuario>.github.io/PanPalCoche/`.
 
 ## Tests
 
