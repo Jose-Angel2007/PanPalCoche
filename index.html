@@ -3,54 +3,64 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>PanPalCoche</title>
+  <title>PanPalCoche · Gasolina barata en Alcalá</title>
   <meta name="description" content="Precios de combustible en las gasolineras de Alcalá de Guadaíra, con datos oficiales del Ministerio.">
-  <meta name="theme-color" content="#0f766e">
+  <meta name="theme-color" content="#1D3FA6">
+  <link rel="icon" href="img/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="img/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/tema.js"></script>
 </head>
 <body>
   <header class="cabecera">
-    <div class="titulo">
-      <h1>PanPalCoche</h1>
-      <p id="actualizado" class="actualizado" aria-live="polite">Cargando precios…</p>
+    <div class="barra">
+      <img class="logo" src="img/icon.svg" alt="" width="40" height="40">
+      <div class="titulo">
+        <h1>PanPalCoche</h1>
+        <p id="actualizado" class="actualizado" aria-live="polite">Cargando precios…</p>
+      </div>
+      <button id="tema" class="icono" type="button" aria-label="Tema: automático. Toca para cambiar"></button>
+      <button id="refrescar" class="icono" type="button" aria-label="Actualizar precios" title="Actualizar precios">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>
+      </button>
     </div>
-    <button id="refrescar" class="icono" type="button" aria-label="Actualizar precios" title="Actualizar precios">
-      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg>
-    </button>
+    <section id="resumen" class="resumen" aria-live="polite" hidden></section>
   </header>
 
   <main>
     <section class="controles" aria-label="Filtros">
-      <label class="campo">
-        <span>Combustible</span>
-        <select id="combustible"></select>
-      </label>
-      <label class="campo">
-        <span>Ordenar por</span>
+      <label class="chip chip-select"><span class="sr">Combustible</span><select id="combustible"></select></label>
+      <label class="chip chip-select"><span class="sr">Ordenar por</span>
         <select id="orden">
-          <option value="precio">Precio</option>
-          <option value="distancia">Distancia</option>
+          <option value="precio">Por precio</option>
+          <option value="distancia">Por distancia</option>
         </select>
       </label>
-      <label class="check">
-        <input type="checkbox" id="solo-abiertas"> Solo abiertas ahora
-      </label>
-      <button id="ubicacion" type="button" class="boton">Usar mi ubicación</button>
+      <label class="chip chip-check"><input type="checkbox" id="solo-abiertas"> Solo abiertas</label>
+      <button id="ubicacion" type="button" class="chip">Usar mi ubicación</button>
     </section>
 
     <p id="error" class="error" role="alert" hidden></p>
-    <section id="resumen" class="resumen" hidden></section>
 
     <div class="contenido">
       <div id="mapa" class="mapa" aria-label="Mapa de gasolineras"></div>
-      <ol id="lista" class="lista"></ol>
+      <ol id="lista" class="lista" aria-label="Gasolineras"></ol>
     </div>
+
+    <button id="vista" class="vista" type="button" aria-controls="mapa">
+      <span class="ver-mapa">Ver en el mapa</span><span class="ver-lista">Ver la lista</span>
+    </button>
   </main>
 
   <footer class="pie">
-    Datos: <a href="https://geoportalgasolineras.es/" target="_blank" rel="noopener">Ministerio para la Transición Ecológica</a>
+    Alcalá de Guadaíra · Datos: <a href="https://geoportalgasolineras.es/" target="_blank" rel="noopener">Ministerio para la Transición Ecológica</a>
     · se actualizan cada 30 min · los horarios no tienen en cuenta festivos.
   </footer>
 

@@ -67,12 +67,31 @@ function distanciaKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** Color de verde (más barata) a rojo (más cara) según la posición en el rango. */
+/**
+ * Color según la posición del precio en el rango: de azul (barata) a naranja (cara).
+ * Azul/naranja se distingue bien con daltonismo (verde/rojo no). Devolvemos una
+ * mezcla CSS (color-mix) de las variables --barato y --caro, así el color se adapta
+ * solo al tema claro u oscuro sin que JS sepa cuál está activo.
+ */
 function colorPrecio(precio, min, max) {
   const t = max > min ? (precio - min) / (max - min) : 0;
-  const tono = 130 - 130 * t; // 130 = verde, 0 = rojo (HSL)
-  return `hsl(${tono}, 70%, 38%)`;
+  return `color-mix(in oklab, var(--caro) ${Math.round(t * 100)}%, var(--barato))`;
 }
+
+/**
+ * Precio más bajo entre las ABIERTAS (o de horario desconocido). Una gasolinera
+ * cerrada no debe salir como "la más barata": no te sirve para repostar ahora.
+ * Si todas están cerradas, usamos todas para que la pantalla no quede vacía.
+ */
+function precioMinimoUtil(lista) {
+  const utiles = lista.filter((e) => e.abierta !== false);
+  const base = utiles.length ? utiles : lista;
+  return base.length ? Math.min(...base.map((e) => e.precio)) : null;
+}
+const esBarata = (e, minUtil) => e.precio === minUtil && e.abierta !== false;
+
+/** ¿Pantalla estrecha? Debe coincidir con el punto de corte del CSS (900px). */
+const esMovil = () => window.matchMedia('(max-width: 899px)').matches;
 
 // ---------- Datos derivados ----------
 /** Combustibles que vende al menos una gasolinera, ordenados por cuántas lo venden. */
@@ -99,7 +118,11 @@ function estacionesVisibles() {
 
   const porPrecio = (a, b) => a.precio - b.precio || (a.distancia ?? 0) - (b.distancia ?? 0);
   const porDistancia = (a, b) => (a.distancia ?? Infinity) - (b.distancia ?? Infinity) || a.precio - b.precio;
-  lista.sort(estado.orden === 'distancia' && estado.ubicacion ? porDistancia : porPrecio);
+  const criterio = estado.orden === 'distancia' && estado.ubicacion ? porDistancia : porPrecio;
+  // Ordenación por clave compuesta: primero abiertas/cerradas (las cerradas al final),
+  // y dentro de cada grupo el criterio elegido.
+  const cerrada = (e) => (e.abierta === false ? 1 : 0);
+  lista.sort((a, b) => cerrada(a) - cerrada(b) || criterio(a, b));
   return lista;
 }
 
@@ -176,18 +199,29 @@ function pintarMapa(lista) {
   const precios = lista.map((e) => e.precio);
   const min = Math.min(...precios);
   const max = Math.max(...precios);
+  const minUtil = precioMinimoUtil(lista);
 
   for (const e of lista) {
     if (e.lat == null || e.lon == null) continue;
+    const clases = ['pin'];
+    if (e.abierta === false) clases.push('pin-cerrada');
+    if (esBarata(e, minUtil)) clases.push('pin-barata');
+    if (e.id === estado.seleccionada) clases.push('pin-sel');
     const icono = L.divIcon({
       className: '',
-      html: `<div class="pin ${e.abierta === false ? 'pin-cerrada' : ''} ${e.id === estado.seleccionada ? 'pin-sel' : ''}"
-                  style="--c:${colorPrecio(e.precio, min, max)}">${fmtPrecio(e.precio)}</div>`,
+      html: `<div class="${clases.join(' ')}" style="--c:${colorPrecio(e.precio, min, max)}">${fmtPrecio(e.precio)}</div>`,
       iconSize: null,
       iconAnchor: [28, 30],
     });
-    const m = L.marker([e.lat, e.lon], { icon: icono, title: e.rotulo, precio: e.precio, zIndexOffset: e.precio === min ? 1000 : 0 })
-      .bindPopup(`<strong>${esc(e.rotulo)}</strong><br>${esc(e.direccion)}<br>${fmtPrecio(e.precio)} €/L`)
+    const zIndex = e.id === estado.seleccionada ? 2000 : esBarata(e, minUtil) ? 1000 : 0;
+    const m = L.marker([e.lat, e.lon], { icon: icono, title: e.rotulo, precio: e.precio, zIndexOffset: zIndex })
+      .bindPopup(
+        `<div class="popup"><strong class="p-marca">${esc(e.rotulo)}</strong>` +
+          `<span class="p-dir">${esc(e.direccion)}</span>` +
+          `<span class="p-precio">${fmtPrecio(e.precio)} <small>€/L</small></span>` +
+          `<a class="ruta" href="${urlRuta(e)}" target="_blank" rel="noopener">Cómo llegar</a></div>`,
+        { offset: [0, -24] } // que el popup salga por encima de la chincheta, no tapándola
+      )
       .on('click', () => seleccionar(e.id, { desdeMapa: true }));
     m.addTo(capaMarcadores);
     marcadores.set(e.id, m);
@@ -202,12 +236,34 @@ function pintarMapa(lista) {
     marcadorYo.setLatLng([estado.ubicacion.lat, estado.ubicacion.lon]);
   }
 
-  // Encuadrar solo la primera vez, para no mover el mapa mientras el usuario lo usa.
-  if (!encuadreHecho) {
-    const puntos = lista.filter((e) => e.lat != null).map((e) => [e.lat, e.lon]);
-    if (puntos.length) mapa.fitBounds(puntos, { padding: [30, 30] });
-    encuadreHecho = true;
-  }
+  encuadrar(lista);
+}
+
+/**
+ * Encuadrar solo la primera vez, para no mover el mapa mientras el usuario lo usa.
+ * Ojo: en móvil el mapa empieza OCULTO (display:none) y Leaflet lo ve de tamaño 0x0;
+ * un fitBounds ahí calcula un zoom absurdo. Por eso solo damos el encuadre por hecho
+ * cuando el contenedor tiene tamaño real.
+ */
+function encuadrar(lista) {
+  if (encuadreHecho || !mapa) return;
+  const tam = mapa.getSize();
+  if (tam.x === 0 || tam.y === 0) return;
+  const puntos = lista.filter((e) => e.lat != null).map((e) => [e.lat, e.lon]);
+  if (!puntos.length) return;
+  mapa.fitBounds(puntos, { padding: [30, 30] });
+  encuadreHecho = true;
+}
+
+/** Leaflet cachea el tamaño del contenedor: tras mostrarlo hay que avisarle. */
+function mapaVisibleOtraVez() {
+  if (!mapa) return;
+  mapa.invalidateSize();
+  encuadrar(estacionesVisibles());
+}
+
+function urlRuta(e) {
+  return e.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lon}` : '#';
 }
 
 // ---------- Lista y cabecera ----------
@@ -225,17 +281,34 @@ function pintarResumen(lista) {
     el.hidden = true;
     return;
   }
-  const baratas = [...lista].sort((a, b) => a.precio - b.precio);
-  const barata = baratas[0];
-  const cara = baratas[baratas.length - 1];
-  const ahorro = (cara.precio - barata.precio) * LITROS_DEPOSITO;
+  // El resumen habla de las que te sirven AHORA (abiertas o de horario desconocido).
+  const utiles = lista.filter((e) => e.abierta !== false);
+  const base = utiles.length >= 2 ? utiles : lista;
+  const min = precioMinimoUtil(base);
+  const max = Math.max(...base.map((e) => e.precio));
+  const ahorro = (max - min) * LITROS_DEPOSITO;
+
   // Con datos reales es habitual el empate (p. ej. tres low-cost al mismo precio).
-  const empatadas = baratas.filter((e) => e.precio === barata.precio).length;
-  const extra = empatadas > 1 ? ` y ${empatadas - 1} más` : '';
+  const empatadas = base.filter((e) => esBarata(e, min) || (e.precio === min && !utiles.length));
+  const NUMEROS = ['', '', 'dos', 'tres', 'cuatro', 'cinco'];
+  const etiqueta = empatadas.length > 1
+    ? `Lo más barato ahora · empate a ${NUMEROS[empatadas.length] || empatadas.length}`
+    : 'Lo más barato ahora';
   el.hidden = false;
   el.innerHTML = `
-    <div><span class="etq">Más barata</span><strong>${esc(barata.rotulo)}</strong>${extra} · ${fmtPrecio(barata.precio)} €/L</div>
-    <div><span class="etq">Diferencia con la más cara</span>${fmtEuros(ahorro)} en un depósito de ${LITROS_DEPOSITO} L</div>`;
+    <div class="r-barata">
+      <span class="etq">${etiqueta}</span>
+      <span class="r-precio">${fmtPrecio(min)}<small>€/L</small></span>
+      <span class="r-marcas">${listaNatural(empatadas.map((e) => `<strong>${esc(e.rotulo)}</strong>`))}</span>
+    </div>
+    <div class="r-ahorro">Llenando ${LITROS_DEPOSITO} L te ahorras <strong>${fmtEuros(ahorro)}</strong> frente a la más cara.</div>`;
+}
+
+/** ["A","B","C"] -> "A, B y C". Con muchas, corta: "A, B, C y 3 más". */
+function listaNatural(items, maximo = 3) {
+  if (items.length > maximo) return `${items.slice(0, maximo).join(', ')} y ${items.length - maximo} más`;
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`;
 }
 
 function pintarLista(lista) {
@@ -248,17 +321,21 @@ function pintarLista(lista) {
   }
   const min = Math.min(...lista.map((e) => e.precio));
   const max = Math.max(...lista.map((e) => e.precio));
+  const minUtil = precioMinimoUtil(lista);
+  let posicion = 0; // solo se numeran las que te sirven; las cerradas van sin número
 
   ul.innerHTML = lista
-    .map((e, i) => {
+    .map((e) => {
       const estadoTxt = e.abierta === true ? 'Abierta' : e.abierta === false ? 'Cerrada' : 'Horario desconocido';
       const estadoCls = e.abierta === true ? 'ok' : e.abierta === false ? 'ko' : 'nd';
-      const rutaUrl = e.lat != null
-        ? `https://www.google.com/maps/dir/?api=1&destination=${e.lat},${e.lon}`
-        : null;
+      const rutaUrl = e.lat != null ? urlRuta(e) : null;
+      const clases = ['tarjeta'];
+      if (e.id === estado.seleccionada) clases.push('sel');
+      if (e.abierta === false) clases.push('cerrada');
+      if (esBarata(e, minUtil)) clases.push('barata');
       return `
-      <li class="tarjeta ${e.id === estado.seleccionada ? 'sel' : ''} ${e.abierta === false ? 'cerrada' : ''}" data-id="${esc(e.id)}" tabindex="0">
-        <div class="pos">${i + 1}</div>
+      <li class="${clases.join(' ')}" data-id="${esc(e.id)}" tabindex="0">
+        <div class="pos">${e.abierta === false ? '' : ++posicion}</div>
         <div class="info">
           <div class="nombre">${esc(e.rotulo)}</div>
           <div class="dir">${esc(e.direccion)}</div>
@@ -334,17 +411,28 @@ function seleccionar(id, { desdeMapa = false } = {}) {
   estado.seleccionada = id;
   render();
   const tarjeta = document.querySelector(`.tarjeta[data-id="${CSS.escape(id)}"]`);
-  if (desdeMapa && tarjeta) tarjeta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // En móvil con el mapa a pantalla completa la lista está oculta: no hay nada que desplazar.
+  if (desdeMapa && tarjeta && !document.body.classList.contains('vista-mapa')) {
+    tarjeta.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
   const m = marcadores.get(id);
   if (!desdeMapa && m && mapa) {
+    // En móvil el mapa está oculto tras la lista: primero lo mostramos.
+    if (esMovil()) cambiarVista(true);
     if (capaMarcadores.zoomToShowLayer) {
       capaMarcadores.zoomToShowLayer(m, () => m.openPopup());
     } else {
       mapa.setView(m.getLatLng(), Math.max(mapa.getZoom(), 15));
       m.openPopup();
     }
-    $('#mapa').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (!esMovil()) $('#mapa').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+}
+
+/** Móvil: alterna entre lista y mapa a pantalla completa (lo pinta el CSS con body.vista-mapa). */
+function cambiarVista(verMapa = !document.body.classList.contains('vista-mapa')) {
+  document.body.classList.toggle('vista-mapa', verMapa);
+  if (verMapa) mapaVisibleOtraVez();
 }
 
 function pedirUbicacion() {
@@ -353,19 +441,24 @@ function pedirUbicacion() {
     boton.textContent = 'Ubicación no disponible';
     return;
   }
+  // data-estado lo usa el CSS para el icono y el color de cada estado.
   boton.disabled = true;
+  boton.dataset.estado = 'localizando';
   boton.textContent = 'Localizando…';
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       estado.ubicacion = { lat: pos.coords.latitude, lon: pos.coords.longitude };
       estado.orden = 'distancia';
+      boton.dataset.estado = 'activada';
       boton.textContent = 'Ubicación activada';
       render();
       if (mapa) mapa.setView([estado.ubicacion.lat, estado.ubicacion.lon], 14);
     },
     (err) => {
       boton.disabled = false;
-      boton.textContent = err.code === err.PERMISSION_DENIED ? 'Permiso denegado' : 'No se pudo localizar';
+      const denegada = err.code === err.PERMISSION_DENIED;
+      boton.dataset.estado = denegada ? 'denegada' : 'error';
+      boton.textContent = denegada ? 'Permiso denegado' : 'No se pudo localizar';
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
   );
@@ -391,6 +484,13 @@ function iniciar() {
   });
   $('#refrescar').addEventListener('click', cargar);
   $('#ubicacion').addEventListener('click', pedirUbicacion);
+  $('#vista')?.addEventListener('click', () => cambiarVista());
+  // Si se pasa de móvil a escritorio (girar la tablet, redimensionar), el mapa
+  // vuelve a estar siempre visible: quitamos la vista de mapa y recolocamos Leaflet.
+  window.matchMedia('(max-width: 899px)').addEventListener('change', (ev) => {
+    if (!ev.matches) document.body.classList.remove('vista-mapa');
+    mapaVisibleOtraVez();
+  });
 
   // Delegación de eventos: un solo listener en la lista en vez de uno por tarjeta,
   // porque las tarjetas se regeneran en cada render().

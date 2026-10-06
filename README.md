@@ -40,7 +40,10 @@ node --test
 | `js/api.js` | Pedir datos a la API y **normalizarlos** ("1,849" → 1.849, claves con tildes → objeto limpio). Capa anticorrupción. |
 | `js/horario.js` | Lógica pura: convierte "L-V: 06:00-22:00; S-D: 07:00-15:00" en intervalos por día y responde "¿abierta ahora?". |
 | `js/app.js` | Estado único + `render()` que pinta lista, resumen y mapa. Polling cada 30 min. |
-| `css/style.css` | Estilos, móvil primero, modo oscuro automático. |
+| `js/tema.js` | Botón de tema (automático, claro, oscuro). Se carga en `<head>` para aplicar el tema antes de pintar. |
+| `css/style.css` | Diseño "Trencadís" (colores del mosaico del Puente del Dragón), móvil primero, claro y oscuro. |
+| `img/`, `manifest.webmanifest` | Logo, iconos y manifiesto para instalarla en la pantalla de inicio del móvil (PWA). |
+| `docs/cambios-diseno.md` | Contrato entre el diseño (Claude Design) y `app.js`: qué IDs, clases y comportamientos espera el CSS. |
 
 ## API usada
 
