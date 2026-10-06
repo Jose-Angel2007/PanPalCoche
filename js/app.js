@@ -306,7 +306,7 @@ function pintarResumen(lista) {
     <div class="r-ahorro">Llenando ${LITROS_DEPOSITO} L te ahorras <strong>${fmtEuros(ahorro)}</strong> frente a la más cara.${
       // Petición sutil justo donde se ve lo que te ahorras, y solo si el ahorro es real.
       ahorro >= AHORRO_MIN_DONAR
-        ? ` <a class="r-invita" href="${DONAR_URL}/1EUR" target="_blank" rel="noopener">¿Me invitas a un café? ☕</a>`
+        ? ` <a class="r-invita" href="${DONAR_URL}/1EUR" target="_blank" rel="noopener">¿Me invitas a un café? :) ☕</a>`
         : ''
     }</div>`;
 }
